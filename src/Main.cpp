@@ -1,7 +1,9 @@
+#include <iostream>
 #include <RED4ext/RED4ext.hpp>
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
 {
+    std::cout << "Starting .NET Runtime..." << std::endl;
     /*
      * Here you can register your custom functions, initalize variable, create hooks and so on. All hooks created here
      * will be attached automatically later, you do not need to attach them manually.
@@ -46,8 +48,8 @@ RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
      * game's version use "RED4EXT_RUNTIME_INDEPENDENT".
      */
 
-    aInfo->name = L"RED4ext.Example.VisualStudio";
-    aInfo->author = L"WopsS";
+    aInfo->name = L"RED4ext.NET";
+    aInfo->author = L"DasDarki";
     aInfo->version = RED4EXT_SEMVER(1, 0, 0);
     aInfo->runtime = RED4EXT_RUNTIME_LATEST;
     aInfo->sdk = RED4EXT_SDK_LATEST;
