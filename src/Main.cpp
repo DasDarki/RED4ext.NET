@@ -1,18 +1,42 @@
 #include <iostream>
 #include <RED4ext/RED4ext.hpp>
 
+#include "Runtime.hpp"
+#include "Natives.hpp"
+
+Runtime* runtime = nullptr;
+bool runtimeStarted = false;
+
 RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
 {
-    std::cout << "Starting .NET Runtime..." << std::endl;
-    /*
-     * Here you can register your custom functions, initalize variable, create hooks and so on. All hooks created here
-     * will be attached automatically later, you do not need to attach them manually.
-     *
-     * Be sure to store the plugin handle and the interface because you cannot get it again later. The plugin handle is
-     * what identify your plugin through the extender.
-     *
-     * Returning "true" in this function loads the plugin, returning "false" will unload it and "Unload" will be called.
-     */
+    AllocConsole();
+    freopen("CONOUT$", "w", stdout);
+
+    std::filesystem::path current_dir = std::filesystem::current_path();
+    std::cout << "Starting .NET Runtime on " << current_dir << "..." << std::endl;
+
+    std::string workingDir = current_dir.string();
+    std::string runtimeVersion = "5.0.9";
+    std::string runtimeDir = (current_dir / "red4ext" / "dotnet").string();
+    std::string runtimeDll = "runtime/RED4ext.NET";
+    std::string runtimeFriendlyName = "RED4ext.NET.Runtime.Bridge, RED4ext.NET";
+
+    runtime = new Runtime(runtimeVersion, runtimeDir, runtimeDll, runtimeFriendlyName);
+
+    if (const int result = runtime->Load(); result != DOTNET_RUNTIME_SUCCESS)
+    {
+        std::cout << "Could not start Runtime! Err: " << result << std::endl;
+        return false;
+    }
+
+    Natives::GenerateBindings(runtime);
+
+    runtime->PushAreas("BindFunctions");
+    runtime->Start(workingDir);
+    runtimeStarted = true;
+
+    std::cout << ".NET Runtime successfully started!" << std::endl;
+
     return true;
 }
 
@@ -25,29 +49,14 @@ RED4EXT_C_EXPORT void RED4EXT_CALL PostLoad()
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Unload()
 {
-    /*
-     * Here you can free resources you allocated during initalization or during the time your plugin was executed.
-     *
-     * Tis function is called when the game is closed or when "Load" returns false.
-     */
+    if (runtimeStarted)
+    {
+        runtime->Stop();
+    }
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
 {
-    /*
-     * This function supply the necessary information about your plugin, like name, version, support runtime and SDK. DO
-     * NOT do anything here yet!
-     *
-     * You MUST have this function!
-     *
-     * Make sure to fill all of the fields here in order to load your plugin correctly.
-     *
-     * Runtime version is the game's version, it is best to let it set to "RED4EXT_RUNTIME_LATEST" if you want to target
-     * the latest game's version that the SDK defined, if the runtime version specified here and the game's version do
-     * not match, your plugin will not be loaded. If you want to use RED4ext only as a loader and you do not care about
-     * game's version use "RED4EXT_RUNTIME_INDEPENDENT".
-     */
-
     aInfo->name = L"RED4ext.NET";
     aInfo->author = L"DasDarki";
     aInfo->version = RED4EXT_SEMVER(1, 0, 0);
@@ -57,9 +66,5 @@ RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
 
 RED4EXT_C_EXPORT uint32_t RED4EXT_CALL Supports()
 {
-    /*
-     * This functions returns only what API version is support by your plugins.
-     * You MUST have this function!
-     */
     return RED4EXT_API_VERSION_LATEST;
 }

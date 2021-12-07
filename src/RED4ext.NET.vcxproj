@@ -88,6 +88,12 @@
   <ItemGroup>
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="coreclr_delegates.h" />
+    <ClInclude Include="Natives.hpp" />
+    <ClInclude Include="Runtime.hpp" />
+    <ClInclude Include="hostfxr.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
